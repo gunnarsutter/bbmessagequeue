@@ -19,6 +19,13 @@ type QueueMessage struct {
 	content     string
 }
 
+// Sets values of the struct varables
+func (qm *QueueMessage) Init(s_id string, m_t int, c string) {
+	qm.senderID = s_id
+	qm.messageType = m_t
+	qm.content = c
+}
+
 // Converts a gRPC message to an internal message
 func (qm *QueueMessage) New(message *blackboard.Message) {
 	qm.senderID = message.SenderID
