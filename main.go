@@ -8,73 +8,73 @@ import (
 
 // Queue of messages in internal format
 type MessageQueue struct {
-	mutex sync.Mutex
-	queue []QueueMessage
+	Mutex sync.Mutex
+	Queue []QueueMessage
 }
 
 // Message in internal format
 type QueueMessage struct {
-	senderID    string
-	messageType int
-	content     string
+	SenderID    string
+	MessageType int
+	Content     string
 }
 
 // Sets values of the struct varables
 func (qm *QueueMessage) Init(s_id string, m_t int, c string) {
-	qm.senderID = s_id
-	qm.messageType = m_t
-	qm.content = c
+	qm.SenderID = s_id
+	qm.MessageType = m_t
+	qm.Content = c
 }
 
 // Converts a gRPC message to an internal message
 func (qm *QueueMessage) New(message *blackboard.Message) {
-	qm.senderID = message.SenderID
-	qm.messageType = int(message.MessageType)
-	qm.content = message.Content
+	qm.SenderID = message.SenderID
+	qm.MessageType = int(message.MessageType)
+	qm.Content = message.Content
 }
 
 // Adds an internal message to the end of the internal message queue
 func (mq *MessageQueue) Push(m *blackboard.Message) {
-	mq.mutex.Lock()
-	defer mq.mutex.Unlock()
+	mq.Mutex.Lock()
+	defer mq.Mutex.Unlock()
 	var qm QueueMessage
 	qm.New(m)
-	mq.queue = append(mq.queue, qm)
+	mq.Queue = append(mq.Queue, qm)
 }
 
 // Adds an internal message to the front of the internal message queue
 func (mq *MessageQueue) BbmPushFront(m *blackboard.Message) {
-	mq.mutex.Lock()
-	defer mq.mutex.Unlock()
+	mq.Mutex.Lock()
+	defer mq.Mutex.Unlock()
 	var qm QueueMessage
 	qm.New(m)
-	mq.queue = append([]QueueMessage{qm}, mq.queue...)
+	mq.Queue = append([]QueueMessage{qm}, mq.Queue...)
 }
 
 // Adds a blackboard message to the front of the internal message queue
 func (mq *MessageQueue) PushFront(qm *QueueMessage) {
-	mq.mutex.Lock()
-	defer mq.mutex.Unlock()
-	mq.queue = append([]QueueMessage{*qm}, mq.queue...)
+	mq.Mutex.Lock()
+	defer mq.Mutex.Unlock()
+	mq.Queue = append([]QueueMessage{*qm}, mq.Queue...)
 }
 
 // Returns and removes an internal message from the front of the queue
 func (mq *MessageQueue) Pop() *QueueMessage {
-	mq.mutex.Lock()
-	defer mq.mutex.Unlock()
-	ret_message := mq.queue[0]
-	mq.queue = mq.queue[1:]
+	mq.Mutex.Lock()
+	defer mq.Mutex.Unlock()
+	ret_message := mq.Queue[0]
+	mq.Queue = mq.Queue[1:]
 	return &ret_message
 }
 
 // Returns the length of the internal message queue
 func (mq *MessageQueue) Length() int {
-	return len(mq.queue)
+	return len(mq.Queue)
 }
 
 // Returns a gRPC message from an internal message
 func (qm *QueueMessage) ToBlackboardMessage(msg *blackboard.Message) {
-	msg.Content = qm.content //DETTA CRASHAR!!! Fortfarande?
-	msg.MessageType = blackboard.MessageType(qm.messageType)
-	msg.SenderID = qm.senderID
+	msg.Content = qm.Content //DETTA CRASHAR!!! Fortfarande?
+	msg.MessageType = blackboard.MessageType(qm.MessageType)
+	msg.SenderID = qm.SenderID
 }
