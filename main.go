@@ -26,14 +26,14 @@ func (qm *QueueMessage) Init(s_id string, m_t int, c string) {
 	qm.Content = c
 }
 
-// Converts a gRPC message to an internal message
+// Populates an internal message using a blackboard message
 func (qm *QueueMessage) New(message *blackboard.Message) {
 	qm.SenderID = message.SenderID
 	qm.MessageType = int(message.MessageType)
 	qm.Content = message.Content
 }
 
-// Adds an internal message to the end of the internal message queue
+// Adds a blackboard message to the end of the internal message queue
 func (mq *MessageQueue) Push(m *blackboard.Message) {
 	mq.Mutex.Lock()
 	defer mq.Mutex.Unlock()
@@ -42,8 +42,15 @@ func (mq *MessageQueue) Push(m *blackboard.Message) {
 	mq.Queue = append(mq.Queue, qm)
 }
 
-// Adds an internal message to the front of the internal message queue
-func (mq *MessageQueue) BbmPushFront(m *blackboard.Message) {
+// Adds an internal message to the end of the internal message queue
+func (mq *MessageQueue) PushQM(qm *QueueMessage) {
+	mq.Mutex.Lock()
+	defer mq.Mutex.Unlock()
+	mq.Queue = append(mq.Queue, *qm)
+}
+
+// Adds a blackboard message to the front of the internal message queue
+func (mq *MessageQueue) PushFront(m *blackboard.Message) {
 	mq.Mutex.Lock()
 	defer mq.Mutex.Unlock()
 	var qm QueueMessage
@@ -51,8 +58,8 @@ func (mq *MessageQueue) BbmPushFront(m *blackboard.Message) {
 	mq.Queue = append([]QueueMessage{qm}, mq.Queue...)
 }
 
-// Adds a blackboard message to the front of the internal message queue
-func (mq *MessageQueue) PushFront(qm *QueueMessage) {
+// Adds an internal message to the front of the internal message queue
+func (mq *MessageQueue) PushFrontQM(qm *QueueMessage) {
 	mq.Mutex.Lock()
 	defer mq.Mutex.Unlock()
 	mq.Queue = append([]QueueMessage{*qm}, mq.Queue...)
@@ -72,7 +79,7 @@ func (mq *MessageQueue) Length() int {
 	return len(mq.Queue)
 }
 
-// Returns a gRPC message from an internal message
+// Populates a blackboard message from an internal message
 func (qm *QueueMessage) ToBlackboardMessage(msg *blackboard.Message) {
 	msg.Content = qm.Content //DETTA CRASHAR!!! Fortfarande?
 	msg.MessageType = blackboard.MessageType(qm.MessageType)
