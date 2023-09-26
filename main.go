@@ -6,6 +6,12 @@ import (
 	"github.com/gunnarsutter/blackboard"
 )
 
+type QueueError struct{}
+
+func (qe *QueueError) Error() string {
+	return "Queue is empty"
+}
+
 // Queue of messages in internal format
 type MessageQueue struct {
 	Mutex sync.Mutex
@@ -66,12 +72,15 @@ func (mq *MessageQueue) PushFrontQM(qm *QueueMessage) {
 }
 
 // Returns and removes an internal message from the front of the queue
-func (mq *MessageQueue) Pop() *QueueMessage {
+func (mq *MessageQueue) Pop() (*QueueMessage, error) {
 	mq.Mutex.Lock()
 	defer mq.Mutex.Unlock()
-	ret_message := mq.Queue[0]
-	mq.Queue = mq.Queue[1:]
-	return &ret_message
+	if mq.Length() > 0 {
+		ret_message := mq.Queue[0]
+		mq.Queue = mq.Queue[1:]
+		return &ret_message, nil
+	}
+	return nil, &QueueError{}
 }
 
 // Returns the length of the internal message queue
